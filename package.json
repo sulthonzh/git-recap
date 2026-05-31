@@ -1,0 +1,18 @@
+{
+  "name": "git-recap",
+  "version": "1.0.0",
+  "description": "Human-readable summaries of your git activity — what did I do this week?",
+  "main": "src/index.js",
+  "bin": {
+    "git-recap": "src/cli.js"
+  },
+  "scripts": {
+    "test": "node --test test/index.test.js"
+  },
+  "keywords": ["git", "summary", "activity", "recap", "standup", "weekly"],
+  "author": "sulthonzh",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  }
+}
