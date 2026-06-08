@@ -171,3 +171,58 @@ describe('recap (integration)', () => {
     fs.rmSync(dir, { recursive: true, force: true });
   });
 });
+
+describe('authorStats', () => {
+  it('includes per-author breakdown in JSON output', () => {
+    const dir = path.join(os.tmpdir(), `git-recap-authstats-${Date.now()}`);
+    makeRepo(dir);
+    commit(dir, 'feat: thing one', 'a.txt', 'aaa');
+    execSync(`git -C "${dir}" config user.name "Other"`);
+    commit(dir, 'fix: thing two', 'b.txt', 'bbb');
+
+    const json = recap({ repoPath: dir, since: '2024-01-01', format: 'json' });
+    const parsed = JSON.parse(json);
+    assert.ok(parsed.stats.authorStats);
+    assert.ok(parsed.stats.authorStats['Test']);
+    assert.ok(parsed.stats.authorStats['Other']);
+    assert.equal(parsed.stats.authorStats['Test'].commits, 1);
+    assert.equal(parsed.stats.authorStats['Other'].commits, 1);
+
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('shows author breakdown in text when multiple authors', () => {
+    const dir = path.join(os.tmpdir(), `git-recap-authbrk-${Date.now()}`);
+    makeRepo(dir);
+    commit(dir, 'feat: first', 'x.txt', 'x');
+    execSync(`git -C "${dir}" config user.name "Alice"`);
+    commit(dir, 'fix: second', 'y.txt', 'y');
+
+    const out = recap({ repoPath: dir, since: '2024-01-01', format: 'text' });
+    assert.ok(out.includes('By author:'));
+    assert.ok(out.includes('Test:'));
+    assert.ok(out.includes('Alice:'));
+
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('hides author breakdown for single author', () => {
+    const dir = path.join(os.tmpdir(), `git-recap-single-${Date.now()}`);
+    makeRepo(dir);
+    commit(dir, 'feat: solo', 's.txt', 's');
+
+    const out = recap({ repoPath: dir, since: '2024-01-01', format: 'text' });
+    assert.ok(!out.includes('By author:'));
+
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
+});
+
+describe('--today flag (CLI)', () => {
+  it('sets since to today', () => {
+    const { execSync: es } = require('child_process');
+    const out = es('node src/cli.js --help', { encoding: 'utf-8', cwd: '/tmp/git-recap' });
+    assert.ok(out.includes('--today'));
+    assert.ok(out.includes('--yesterday'));
+  });
+});

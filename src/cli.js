@@ -34,6 +34,16 @@ function parseArgs(argv) {
       case '--md':
         args.format = 'markdown';
         break;
+      case '--today':
+        args.since = new Date().toISOString().split('T')[0];
+        break;
+      case '--yesterday': {
+        const d = new Date();
+        d.setDate(d.getDate() - 1);
+        args.since = d.toISOString().split('T')[0];
+        args.until = d.toISOString().split('T')[0];
+        break;
+      }
       case '--help':
       case '-h':
         printHelp();
@@ -62,6 +72,8 @@ Usage:
 Options:
   --since <date>     Start date (YYYY-MM-DD or relative like "2 weeks ago")
   --until <date>     End date
+  --today            Shorthand for --since today (standup-friendly)
+  --yesterday        Shorthand for yesterday only (standup-friendly)
   --author <name>    Filter by author name or email
   --branch <name>    Filter by branch (default: all)
   --repo <path>      Path to git repo (default: current directory)

@@ -203,6 +203,15 @@ function formatRecap(data) {
     lines.push('');
   }
 
+  // Per-author breakdown
+  if (stats.authorStats && stats.authorStats.size > 1) {
+    lines.push('👥 By author:');
+    for (const [name, s] of [...stats.authorStats.entries()].sort((a, b) => b[1].commits - a[1].commits)) {
+      lines.push(`  ${name}: ${s.commits} commits, +${s.insertions}/-${s.deletions}`);
+    }
+    lines.push('');
+  }
+
   if (hotFiles.length > 0) {
     lines.push('🔥 Most changed files:');
     for (const { file, count } of hotFiles.slice(0, 5)) {
@@ -226,6 +235,7 @@ function formatJson(data) {
       totalInsertions: stats.totalInsertions,
       totalDeletions: stats.totalDeletions,
       authors: stats.authors,
+      authorStats: stats.authorStats ? Object.fromEntries([...stats.authorStats.entries()].map(([name, s]) => [name, s])) : {},
     },
     types: Object.fromEntries(types),
     byDate: Object.fromEntries(
@@ -263,6 +273,16 @@ function formatMarkdown(data) {
     lines.push('');
     for (const [t, c] of [...types.entries()].sort((a, b) => b[1] - a[1])) {
       lines.push(`- \`${t}\`: ${c}`);
+    }
+    lines.push('');
+  }
+
+  // Per-author breakdown
+  if (stats.authorStats && stats.authorStats.size > 1) {
+    lines.push('## Authors');
+    lines.push('');
+    for (const [name, s] of [...stats.authorStats.entries()].sort((a, b) => b[1].commits - a[1].commits)) {
+      lines.push(`- **${name}**: ${s.commits} commits (+${s.insertions}/-${s.deletions})`);
     }
     lines.push('');
   }
@@ -320,6 +340,19 @@ function recap(options) {
   const totalDeletions = commits.reduce((s, c) => s + c.deletions, 0);
   const totalFiles = commits.reduce((s, c) => s + c.files, 0);
 
+  // Per-author stats
+  const authorStats = new Map();
+  for (const c of commits) {
+    if (!authorStats.has(c.author)) {
+      authorStats.set(c.author, { commits: 0, insertions: 0, deletions: 0, files: 0 });
+    }
+    const s = authorStats.get(c.author);
+    s.commits++;
+    s.insertions += c.insertions;
+    s.deletions += c.deletions;
+    s.files += c.files;
+  }
+
   let repoName;
   try {
     repoName = execSync(`git -C "${repoPath}" remote get-url origin`, { encoding: 'utf-8' }).trim().split('/').pop().replace('.git', '');
@@ -327,7 +360,7 @@ function recap(options) {
     repoName = repoPath === '.' ? process.cwd().split('/').pop() : repoPath.split('/').pop();
   }
 
-  const data = { byDate, types, hotFiles, stats: { totalCommits: commits.length, totalFiles, totalInsertions, totalDeletions, authors }, repoName };
+  const data = { byDate, types, hotFiles, stats: { totalCommits: commits.length, totalFiles, totalInsertions, totalDeletions, authors, authorStats }, repoName };
 
   switch (format) {
     case 'json': return formatJson(data);
