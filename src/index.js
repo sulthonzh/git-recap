@@ -31,7 +31,6 @@ function getCommits(options) {
 
   if (!rawMeta) return [];
 
-  // Get numstat with short hash to match
   let statCmd = `git -C "${repoPath}" log ${rev} --format="%H" --numstat --no-merges`;
   if (since) statCmd += ` --since="${since}"`;
   if (until) statCmd += ` --until="${until}"`;
@@ -44,7 +43,6 @@ function getCommits(options) {
     rawStat = '';
   }
 
-  // Parse numstat per commit hash
   const statsByHash = new Map();
   let currentHash = null;
   for (const line of rawStat.split('\n')) {
@@ -180,7 +178,6 @@ function formatRecap(data) {
   lines.push(`${stats.totalInsertions} insertions, ${stats.totalDeletions} deletions across ${stats.totalFiles} files`);
   lines.push('');
 
-  // Commit type breakdown
   if (types.size > 0) {
     const typeStr = [...types.entries()]
       .sort((a, b) => b[1] - a[1])
@@ -203,7 +200,6 @@ function formatRecap(data) {
     lines.push('');
   }
 
-  // Per-author breakdown
   if (stats.authorStats && stats.authorStats.size > 1) {
     lines.push('👥 By author:');
     for (const [name, s] of [...stats.authorStats.entries()].sort((a, b) => b[1].commits - a[1].commits)) {
@@ -277,7 +273,6 @@ function formatMarkdown(data) {
     lines.push('');
   }
 
-  // Per-author breakdown
   if (stats.authorStats && stats.authorStats.size > 1) {
     lines.push('## Authors');
     lines.push('');
@@ -324,7 +319,6 @@ function formatMarkdown(data) {
 function recap(options) {
   const { repoPath = '.', format = 'text' } = options;
 
-  // Default since to 7 days ago
   const since = options.since || defaultSince();
   const until = options.until;
 
@@ -340,7 +334,6 @@ function recap(options) {
   const totalDeletions = commits.reduce((s, c) => s + c.deletions, 0);
   const totalFiles = commits.reduce((s, c) => s + c.files, 0);
 
-  // Per-author stats
   const authorStats = new Map();
   for (const c of commits) {
     if (!authorStats.has(c.author)) {
