@@ -2,7 +2,6 @@
 'use strict';
 
 const { recap } = require('./index');
-const path = require('path');
 
 function parseArgs(argv) {
   const args = { repoPath: '.', format: 'text' };
