@@ -27,5 +27,8 @@
   },
   "files": [
     "src/"
-  ]
+  ],
+  "devDependencies": {
+    "@changesets/cli": "^2.31.0"
+  }
 }
